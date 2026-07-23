@@ -3,41 +3,19 @@
      It will be read and overwritten.
      DO NOT EDIT! -->
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
-<TITLE>Bookmarks V2</TITLE>
+<TITLE>Bookmarks</TITLE>
 
-<head>
-     <style>
-#search-container{
-    position:sticky;
-    top:0;
-    background:white;
-    padding:12px;
-    border-bottom:1px solid #ddd;
-    z-index:9999;
-}
-
-#bookmark-search{
+<input 
+  type="text" 
+  id="searchBox" 
+  placeholder="Keresés a könyvjelzők között..."
+  style="
     width:100%;
-    padding:10px 14px;
+    padding:10px;
     font-size:16px;
-    border:1px solid #aaa;
-    border-radius:6px;
-    box-sizing:border-box;
-}
-</style>
-     
-</head>
-
-
-<body>
-     <div id="search-container">
-    <input
-        type="text"
-        id="bookmark-search"
-        placeholder="🔍 Könyvjelző keresése..."
-        autocomplete="off">
-</div>
-
+    margin-bottom:15px;
+  "
+>
 <DL><p>
     <DT><H3 ADD_DATE="1766931048" LAST_MODIFIED="1783002216" PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>
     <DL><p>
@@ -184,33 +162,121 @@
             <DT><A HREF="https://ocntuat.dhl.com/ocnt/jsp/common/home.xhtml?faces-redirect=true&tab=containerization_tab" ADD_DATE="1783002240">OCNT TEST UAT</A>
             <DT><A HREF="https://dcvsomp.dhl.com/dcvs/" ADD_DATE="1783002240">DCVS TEST UAT</A>
             <DT><A HREF="https://lt1-api-gateway-prg-uat.aks.dhl.com/login" ADD_DATE="1783002241" ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC8klEQVR4nIRTTWhUVxT+zr33vZd582cyE804JQkUFNq00E53boQ2dNMWuiiliy5rS0sLhVJciEtRBHdxkYWCLhRxIbjRhT8YcaNBVAyCJi4SNFHjTObN35t37z3eF6OIKN7NfZdzzve+73znKLx1GCBy131ZOAuI7wIi7leG9mm7spRbkYcjFxbgO5f1Wu13IFF4z5Ek2AgFsob8UqmDDDr0rEFsjIvS67z3AhidEKOPnoPQS4uTFknTxE0mBMSO4+yHAGQ2ZFUsYG2tYbOF0k4pJVphweaHhil+8BC1VvRuAFpvAxB++RkN/vozusdPYvT0KcPsOCzNY/Wf/0EqeJ0vXn0sllB9/MXI8NNauXINGCLfM6qyBfGtm3iy/yCZeoMe/bs7ZQYqhJh+SwL1o8IFXvXvdepJtQIsQMhm2irdbFB08SLlv53k5swVkh9/Am63UXOx2VcMTrnbJrDxk9YO6vKn7mkgUzWUmsYizIEGAqggz/H8AsxqnX/ZkLoOMOwyjaQ++qasCBlnlIMjchYynHaYPjjRqTWk/CzD8+jEhpfrAHn3ENbJoLSS0/8K03Zd3vk1bb97W2766Rs2SSJcoTVau9GC3fVmD75i1otykPNC9kIHEHt5I+7Ng3/7O7aFvKa7N4U5cxWDWtpASh0bjW2uJp1ZurGr5i1Mz1YmZHEyNt2SUFnl6eacQMAROhNOTiw36CpRdGPVlUoGzx6Y6HwfeEQPN289IJh/jJ9GK2okb8xy3ZmYy3DUhQrDDqej30tAGQ+mHkGNFDlZbsmBcm6zft46Lv/btv1c9fBUOb50eXT06PR4Mjc3vnXvnqrQcXXo+x/Gs59PjPnlwbEtf/0xZpYfj1UPHRrvzcyMfnTsSCm6fn2H0sb22mFmoAFri9kc6o6sazK5tUEy4IM5Qc9zO+T79JyZM47JGllsyobCCjJ0X+SmKPT/7HQSK0KfuBODAkGcOPvc/L/cLGe555B7mkXWg21rzuQCwX0z9QIAAP//i2zUrwAAAAZJREFUAwBuRVATJc+4/wAAAABJRU5ErkJggg==">LT1 TEST UAT</A>
+		<DT><A HREF="https://ecisuat.dhl.com/intercept-service/ecis-modern/loginv3.html" ADD_DATE="1784807534">ECIS TEST UAT</A>
         </DL><p>
     </DL><p>
 </DL><p>
 
- const row = link.closest("DT") || link.parentElement;
+<script>
+const searchBox = document.getElementById("searchBox");
 
-        if(row)
-            row.style.display = visible ? "" : "none";
-    });
+const categories = document.querySelectorAll("h3");
 
-    // mappák automatikus elrejtése
-    document.querySelectorAll("DL").forEach(dl=>{
+searchBox.addEventListener("input", function () {
 
-        let visible=false;
+    const search = this.value.toLowerCase().trim();
 
-        dl.querySelectorAll("DT").forEach(dt=>{
-            if(dt.style.display!="none")
-                visible=true;
+    categories.forEach(category => {
+
+        const categoryContainer = category.closest("dt").parentElement;
+
+        // Kategórián belüli linkek
+        const links = categoryContainer.querySelectorAll("a");
+
+
+        let categoryMatch = category.textContent
+            .toLowerCase()
+            .includes(search);
+
+        let linkMatch = false;
+
+
+        links.forEach(link => {
+
+            // Chrome PDF viewer link kizárása
+            if (link.href.startsWith("chrome-extension://")) {
+                link.parentElement.style.display = "none";
+                return;
+            }
+
+
+            const text = link.textContent.toLowerCase();
+
+
+            if (
+                search === "" ||
+                text.includes(search)
+            ) {
+
+                link.parentElement.style.display = "";
+
+                if (search !== "") {
+                    linkMatch = true;
+                }
+
+            } else {
+
+                link.parentElement.style.display = "none";
+
+            }
+
         });
 
-        dl.style.display=visible?"":"none";
+
+
+        if (search === "") {
+
+            category.style.display = "";
+            categoryContainer.style.display = "";
+
+            links.forEach(link => {
+                link.parentElement.style.display = "";
+            });
+
+        }
+
+        else if (categoryMatch) {
+
+            // Kategória név találat:
+            // teljes kategória tartalom visszaállítása
+
+            category.style.display = "";
+            categoryContainer.style.display = "";
+
+            categoryContainer.querySelectorAll("dt").forEach(dt => {
+                dt.style.display = "";
+            });
+
+            links.forEach(link => {
+
+                if (!link.href.startsWith("chrome-extension://")) {
+                    link.style.display = "";
+                    link.parentElement.style.display = "";
+                }
+
+            });
+
+        }
+
+        else if (linkMatch) {
+
+            // Könyvjelző találat
+
+            category.style.display = "";
+            categoryContainer.style.display = "";
+
+        }
+
+        else {
+
+            // Nincs találat
+
+            category.style.display = "none";
+            categoryContainer.style.display = "none";
+
+        }
+
     });
 
 });
 </script>
-     
-        </body>
-             
-             
-             
