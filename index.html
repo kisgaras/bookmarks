@@ -169,114 +169,109 @@
 
 <script>
 const searchBox = document.getElementById("searchBox");
+const rootList = document.querySelector("dl");
+const normalizeText = (text) => text.toLocaleLowerCase("hu-HU").trim();
 
-const categories = document.querySelectorAll("h3");
+const setVisible = (element, isVisible) => {
+    if (element) {
+        element.hidden = !isVisible;
+    }
+};
 
-searchBox.addEventListener("input", function () {
+const getFolderList = (folderHeading) => {
+    const headingItem = folderHeading.closest("dt");
+    const nextElement = headingItem?.nextElementSibling;
 
-    const search = this.value.toLowerCase().trim();
+    if (nextElement?.tagName === "DL") {
+        return nextElement;
+    }
 
-    categories.forEach(category => {
+    const nestedList = Array.from(headingItem?.children || []).find((child) => child.tagName === "DL");
+    return nestedList?.tagName === "DL" ? nestedList : null;
+};
 
-        const categoryContainer = category.closest("dt").parentElement;
+const getFolderHeadingForList = (list) => {
+    const previousItem = list.previousElementSibling;
 
-        // Kategórián belüli linkek
-        const links = categoryContainer.querySelectorAll("a");
+    if (previousItem?.tagName === "DT") {
+        const previousHeading = Array.from(previousItem.children).find((child) => child.tagName === "H3");
 
+        if (previousHeading) {
+            return previousHeading;
+        }
+    }
 
-        let categoryMatch = category.textContent
-            .toLowerCase()
-            .includes(search);
+    return Array.from(list.closest("dt")?.children || []).find((child) => child.tagName === "H3") || null;
+};
 
-        let linkMatch = false;
+const revealAncestors = (element) => {
+    let currentList = element.closest("dl");
 
+    while (currentList) {
+        setVisible(currentList, true);
 
-        links.forEach(link => {
-
-            // Chrome PDF viewer link kizárása
-            if (link.href.startsWith("chrome-extension://")) {
-                link.parentElement.style.display = "none";
-                return;
-            }
-
-
-            const text = link.textContent.toLowerCase();
-
-
-            if (
-                search === "" ||
-                text.includes(search)
-            ) {
-
-                link.parentElement.style.display = "";
-
-                if (search !== "") {
-                    linkMatch = true;
-                }
-
-            } else {
-
-                link.parentElement.style.display = "none";
-
-            }
-
-        });
-
-
-
-        if (search === "") {
-
-            category.style.display = "";
-            categoryContainer.style.display = "";
-
-            links.forEach(link => {
-                link.parentElement.style.display = "";
-            });
-
+        const folderHeading = getFolderHeadingForList(currentList);
+        if (!folderHeading) {
+            break;
         }
 
-        else if (categoryMatch) {
+        setVisible(folderHeading.closest("dt"), true);
+        currentList = folderHeading.closest("dt")?.parentElement?.closest("dl") || null;
+    }
+};
 
-            // Kategória név találat:
-            // teljes kategória tartalom visszaállítása
+const revealFolderContents = (folderHeading) => {
+    const folderItem = folderHeading.closest("dt");
+    const folderList = getFolderList(folderHeading);
 
-            category.style.display = "";
-            categoryContainer.style.display = "";
+    setVisible(folderItem, true);
+    setVisible(folderList, true);
 
-            categoryContainer.querySelectorAll("dt").forEach(dt => {
-                dt.style.display = "";
-            });
-
-            links.forEach(link => {
-
-                if (!link.href.startsWith("chrome-extension://")) {
-                    link.style.display = "";
-                    link.parentElement.style.display = "";
-                }
-
-            });
-
-        }
-
-        else if (linkMatch) {
-
-            // Könyvjelző találat
-
-            category.style.display = "";
-            categoryContainer.style.display = "";
-
-        }
-
-        else {
-
-            // Nincs találat
-
-            category.style.display = "none";
-            categoryContainer.style.display = "none";
-
-        }
-
+    folderList?.querySelectorAll("dt, dl").forEach((element) => {
+        setVisible(element, true);
     });
 
+    revealAncestors(folderItem);
+};
+
+const resetSearch = () => {
+    document.querySelectorAll("dt, dl").forEach((element) => {
+        setVisible(element, true);
+    });
+};
+
+const filterBookmarks = (search) => {
+    document.querySelectorAll("dt").forEach((item) => {
+        setVisible(item, false);
+    });
+    document.querySelectorAll("dl").forEach((list) => {
+        setVisible(list, false);
+    });
+    setVisible(rootList, true);
+
+    document.querySelectorAll("a").forEach((bookmark) => {
+        if (normalizeText(bookmark.textContent).includes(search)) {
+            const bookmarkItem = bookmark.closest("dt");
+            setVisible(bookmarkItem, true);
+            revealAncestors(bookmarkItem);
+        }
+    });
+
+    document.querySelectorAll("h3").forEach((folderHeading) => {
+        if (normalizeText(folderHeading.textContent).includes(search)) {
+            revealFolderContents(folderHeading);
+        }
+    });
+};
+
+searchBox.addEventListener("input", function () {
+    const search = normalizeText(this.value);
+
+    if (search === "") {
+        resetSearch();
+        return;
+    }
+
+    filterBookmarks(search);
 });
 </script>
